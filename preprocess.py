@@ -8,13 +8,13 @@ https://www.github.com/andabi
 import librosa
 import numpy as np
 from config import ModelConfig
-import soundfile as sf
+#import soundfile as sf
 
 
 # Batch considered
 def get_random_wav(filenames, sec, sr=ModelConfig.SR):
-    src1_src2 = map(lambda f: _sample_range(_pad_wav(librosa.load(f, sr=sr, mono=False)[0], sr, sec), sr, sec), filenames)
-    mixed = np.array(map(lambda f: librosa.to_mono(f), src1_src2))
+    src1_src2 = list(map(lambda f: _sample_range(_pad_wav(librosa.load(f, sr=sr, mono=False)[0], sr, sec), sr, sec), filenames))
+    mixed = np.array(list(map(lambda f: librosa.to_mono(f), src1_src2)))
     src1_src2 = np.array(src1_src2)
     src1, src2 = src1_src2[:, 0], src1_src2[:, 1]
     return mixed, src1, src2
@@ -22,23 +22,23 @@ def get_random_wav(filenames, sec, sr=ModelConfig.SR):
 
 # Batch considered
 def to_spectrogram(wav, len_frame=ModelConfig.L_FRAME, len_hop=ModelConfig.L_HOP):
-    return np.array(map(lambda w: librosa.stft(w, n_fft=len_frame, hop_length=len_hop), wav))
+    return np.array(list(map(lambda w: librosa.stft(w, n_fft=int(len_frame), hop_length=int(len_hop)), wav)))
 
 
 # Batch considered
 def to_wav(mag, phase, len_hop=ModelConfig.L_HOP):
     stft_maxrix = get_stft_matrix(mag, phase)
-    return np.array(map(lambda s: librosa.istft(s, hop_length=len_hop), stft_maxrix))
+    return np.array(list(map(lambda s: librosa.istft(s, hop_length=int(len_hop)), stft_maxrix)))
 
 
 # Batch considered
 def to_wav_from_spec(stft_maxrix, len_hop=ModelConfig.L_HOP):
-    return np.array(map(lambda s: librosa.istft(s, hop_length=len_hop), stft_maxrix))
+    return np.array(list(map(lambda s: librosa.istft(s, hop_length=int(len_hop)), stft_maxrix)))
 
 
 # Batch considered
 def to_wav_mag_only(mag, init_phase, len_frame=ModelConfig.L_FRAME, len_hop=ModelConfig.L_HOP, num_iters=50):
-    return np.array(map(lambda (m, p): griffin_lim(m, len_frame, len_hop, num_iters=num_iters, phase_angle=p), zip(mag, init_phase)))
+    return np.array(list(map(lambda mp: griffin_lim(mp[0], len_frame, int(len_hop), num_iters=int(num_iters), phase_angle=mp[1]), zip(mag, init_phase))))
 
 
 # Batch considered
@@ -69,8 +69,8 @@ def hard_time_freq_mask(target_src, remaining_src):
 
 
 def write_wav(data, path, sr=ModelConfig.SR, format='wav', subtype='PCM_16'):
-    sf.write('{}.wav'.format(path), data, sr, format=format, subtype=subtype)
-    # librosa.output.write_wav('{}.wav'.format(path), data.astype(np.int16), sr)
+    #librosa..write('{}.wav'.format(path), data, sr, format=format, subtype=subtype)
+    librosa.output.write_wav('{}.wav'.format(path), data.astype(np.int16), sr)
 
 
 def griffin_lim(mag, len_frame, len_hop, num_iters, phase_angle=None, length=None):
